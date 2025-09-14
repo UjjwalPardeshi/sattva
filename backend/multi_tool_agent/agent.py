@@ -8,7 +8,7 @@ import json
 load_dotenv()
 
 # Prepare RAG pipeline
-pdf_path = "/home/diagla/code/backend/data/ayurveda_book.pdf"
+pdf_path = "/home/diagla/code/sattva/backend/data/ayurveda_book.pdf"
 chunks, faiss_index, emb_model = build_pipeline(pdf_path, model_name="all-MiniLM-L6-v2")
 
 # Load Gemini API key from environment variables
@@ -26,15 +26,31 @@ def generate_report(data: str) -> dict:
     prompt = (
         f"User input: {data}\n"
         f"Relevant context from Ayurveda book:\n{context}\n"
-        "Respond only with a JSON object with four keys exactly as below (no extra formatting, no markdown):\n"
-        "1. \"user_food_dosha_mapping\" - add food item name as the heading , numerical mapping (0-1) of each dosha (Vata, Pitta, Kapha) for the food item the user mentioned,\n"
-        "2. \"user_food_description\" - a concise Ayurvedic description for that food,\n"
-
-        "3. \"suggested_food_dosha_mapping\" - add food name as the heading, numerical dosha mapping (0-1) for a healthier alternate dish or recipe,\n"
-        "4. \"suggested_food_description\" - Ayurvedic description for the suggested food or dish.\n"
-        "Use only JSON notation in the response.\n"
-        "You are an Ayurveda AI expert. Provide clear, simple Ayurvedic insights focusing on doshas and dietary effects.\n"
+        "Respond only with a valid JSON object. Do NOT include markdown, code blocks, backticks, or any extra formatting.\n"
+        "Your JSON response must include exactly these keys, no more, no less:\n"
+        "1. \"user_food_dosha_mapping\" - map the food item user mentioned to dosha values (Vata, Pitta, Kapha) each between 0 and 1.\n"
+        "2. \"user_food_description\" - a concise Ayurvedic description for that food item.\n"
+        "3. \"suggested_food_dosha_mapping\" - map a healthier suggested alternate dish or recipe to dosha values (0-1).\n"
+        "4. \"suggested_food_description\" - an Ayurvedic description of the suggested alternate.\n"
+        "Additionally, add a key \"rasa_panchaka_explanation\" which is an object holding one-sentence descriptions for each of the five Rasa Panchaka properties (Rasa, Guna, Virya, Vipaka, Prabhava) as they relate to the food mentioned.\n"
+        "Return the response strictly as a JSON object with these keys. No commentary or extra text.\n"
+        "Example response format:\n"
+        "{\n"
+        "  \"user_food_dosha_mapping\": {\"Daal and Roti\": {\"Vata\": 0.4, \"Pitta\": 0.3, \"Kapha\": 0.5}},\n"
+        "  \"user_food_description\": \"Daal and Roti is a nourishing meal combining light and heavy qualities, generally balancing but slightly increasing Kapha.\",\n"
+        "  \"suggested_food_dosha_mapping\": {\"Mung Daal Khichdi\": {\"Vata\": 0.2, \"Pitta\": 0.2, \"Kapha\": 0.3}},\n"
+        "  \"suggested_food_description\": \"Mung Daal Khichdi is light, digestive, and suitable for all dosha types.\",\n"
+        "  \"rasa_panchaka_explanation\": {\n"
+        "    \"Rasa\": \"Daal is astringent or sweet; roti is predominantly sweet.\",\n"
+        "    \"Guna\": \"Combines dry and light qualities of daal with heavy and unctuous qualities of roti.\",\n"
+        "    \"Virya\": \"Both have cooling (sheeta) potency.\",\n"
+        "    \"Vipaka\": \"Post-digestive tastes are pungent or sweet, nourishing the body.\",\n"
+        "    \"Prabhava\": \"Properly prepared meal strengthens and nourishes the body.\"\n"
+        "  }\n"
+        "}\n"
     )
+
+
 
     # Call Gemini 2.5 flash model
     model = genai.GenerativeModel("gemini-2.5-flash")
