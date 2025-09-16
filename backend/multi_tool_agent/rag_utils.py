@@ -5,7 +5,7 @@ from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 import faiss
 
-# --------- PDF Extraction ---------
+
 def extract_pdf_text(pdf_path: str) -> str:
     """Extracts all text from a PDF file."""
     if not os.path.exists(pdf_path):
@@ -17,12 +17,12 @@ def extract_pdf_text(pdf_path: str) -> str:
         text += page_text
     return text
 
-# --------- Text Chunking ----------
+
 def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
     """Splits text into chunks for embedding."""
     return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
 
-# --------- Embedding Creation ----------
+
 def create_embeddings(chunks: List[str], model_name: str = 'all-MiniLM-L6-v2') -> np.ndarray:
     """Creates embeddings for a list of text chunks."""
     model = SentenceTransformer(model_name)
